@@ -2,11 +2,8 @@ package com.example.alarmapp;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -26,7 +23,9 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     TextView textView;
-
+    final TimePicker picker = (TimePicker) findViewById(R.id.timePicker);
+    private AlarmManager alarmManager;
+    private int hour, minute;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
                             int minute = calendar.get(Calendar.MINUTE); // 분
                             int second = calendar.get(Calendar.SECOND); // 초
 
-                            textView.setText( year + "년 " + month + "월 " + day + "일\n" + hour + "시 " + minute + "분" + second + "초 \n");
+                            textView.setText(year + "년 " + (month + 1) + "월 " + day + "일\n" + hour + "시 " + minute + "분" + second + "초 \n");
                         }
                     });
                     try {
@@ -62,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         }; // new Thread() { };
         thread.start();
 
-        final TimePicker picker=(TimePicker)findViewById(R.id.timePicker);
+
         picker.setIs24HourView(true);
         //미리 설정한 시간이 있으면 그 값으로 보인다.
         SharedPreferences sharedPreferences = getSharedPreferences("daily alarm", MODE_PRIVATE);
@@ -73,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         nextNotifyTime.setTimeInMillis(millis);
         Date nextDate = nextNotifyTime.getTime();
         String date_text = new SimpleDateFormat("yyyy년 MM월 dd일 EE요일 a hh시 mm분 ", Locale.getDefault()).format(nextDate);
-        Toast.makeText(getApplicationContext(),"[처음 실행시] 다음 알람은 " + date_text + "으로 설정되었습니다!!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "[처음 실행시] 다음 알람은 " + date_text + "으로 설정되었습니다!!", Toast.LENGTH_SHORT).show();
 
         // 이전에 설정해둔 값으로 TimePicker를 초기화 합니다.
         Date currentTime = nextNotifyTime.getTime();
@@ -84,11 +83,10 @@ public class MainActivity extends AppCompatActivity {
         int pre_minute = Integer.parseInt(MinuteFormat.format(currentTime));
 
 
-        if (Build.VERSION.SDK_INT >= 23 ){
+        if (Build.VERSION.SDK_INT >= 23) {
             picker.setHour(pre_hour);
             picker.setMinute(pre_minute);
-        }
-        else{
+        } else {
             picker.setCurrentHour(pre_hour);
             picker.setCurrentMinute(pre_minute);
         }
@@ -101,22 +99,19 @@ public class MainActivity extends AppCompatActivity {
 
                 int hour, hour_24, minute;
                 String am_pm;
-                if (Build.VERSION.SDK_INT >= 23 ){
+                if (Build.VERSION.SDK_INT >= 23) {
                     hour_24 = picker.getHour();
                     minute = picker.getMinute();
-                }
-                else{
+                } else {
                     hour_24 = picker.getCurrentHour();
                     minute = picker.getCurrentMinute();
                 }
-                if(hour_24 > 12) {
+                if (hour_24 > 12) {
                     am_pm = "PM";
                     hour = hour_24 - 12;
-                }
-                else
-                {
+                } else {
                     hour = hour_24;
-                    am_pm="AM";
+                    am_pm = "AM";
                 }
                 // 현재 지정된 시간으로 알람 시간 설정
                 Calendar calendar = Calendar.getInstance();
@@ -132,42 +127,39 @@ public class MainActivity extends AppCompatActivity {
 
                 Date currentDateTime = calendar.getTime();
                 String date_text = new SimpleDateFormat("yyyy년 MM월 dd일 EE요일 a hh시 mm분 ", Locale.getDefault()).format(currentDateTime);
-                Toast.makeText(getApplicationContext(),date_text + "으로 알람이 설정되었습니다!", Toast.LENGTH_SHORT).show();
-
-                //  Preference에 설정한 값 저장
-                SharedPreferences.Editor editor = getSharedPreferences("daily alarm", MODE_PRIVATE).edit();
-                editor.putLong("nextNotifyTime", (long)calendar.getTimeInMillis());
-                editor.apply();
-
-
-                diaryNotification(calendar);
+                Toast.makeText(getApplicationContext(), date_text + "으로 알람이 설정되었습니다!", Toast.LENGTH_SHORT).show();
             }
 
         });
     } //onCreate
 
-    private void diaryNotification(Calendar calendar) {
-        Boolean dailyNotify = true; // 무조건 알람을 사용한다.
+    public void register(View view) {
 
-        PackageManager pm = this.getPackageManager();
-        ComponentName receiver = new ComponentName(this, DeviceBootReceiver.class);
-        Intent alarmIntent = new Intent(this, AlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, alarmIntent, 0);
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        PendingIntent pIntent = PendingIntent.getBroadcast(this, 0,intent, 0);
 
 
-        // 사용자가 계속 알람을 허용했다면에 대한 내용
-        if (dailyNotify) {
-            if (alarmManager != null) {
-                alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pendingIntent);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
-                }
-            }
-            // 부팅 후 실행되는 리시버 사용가능하게 설정한다.
-            pm.setComponentEnabledSetting(receiver,
-                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                    PackageManager.DONT_KILL_APP);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            hour=picker.getHour();
+            minute=picker.getMinute();
         }
-    }
-} // MainActivity
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        // 지정한 시간에 매일 알림
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),  AlarmManager.INTERVAL_DAY, pIntent);
+
+    }// register()
+
+
+    public void unregister(View view) {
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        PendingIntent pIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+        alarmManager.cancel(pIntent);
+    }// unregister()
+
+}// MainActivity
