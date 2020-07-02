@@ -1,8 +1,6 @@
 package com.example.alarmapp;
 
 import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
@@ -133,33 +131,5 @@ public class MainActivity extends AppCompatActivity {
         });
     } //onCreate
 
-    public void register(View view) {
-
-        Intent intent = new Intent(this, AlarmReceiver.class);
-        PendingIntent pIntent = PendingIntent.getBroadcast(this, 0,intent, 0);
-
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            hour=picker.getHour();
-            minute=picker.getMinute();
-        }
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        calendar.set(Calendar.MINUTE, minute);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-
-        // 지정한 시간에 매일 알림
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),  AlarmManager.INTERVAL_DAY, pIntent);
-
-    }// register()
-
-
-    public void unregister(View view) {
-        Intent intent = new Intent(this, AlarmReceiver.class);
-        PendingIntent pIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-        alarmManager.cancel(pIntent);
-    }// unregister()
 
 }// MainActivity
