@@ -20,7 +20,7 @@ public class AlarmService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-
+    //코드 실행할 때 개발자 옵션에서 알림 채널 경고 표시하니 오류 해결되었다.
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // Foreground 에서 실행되면 Notification 을 보여줘야 됨
